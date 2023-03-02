@@ -1,0 +1,84 @@
+create database SK_DATABASE;
+USE SK_DATABASE;
+
+
+CREATE OR REPLACE TABLE "SALES_DATA"
+(
+  order_id string ,
+  order_date DATETIME primary key,
+  ship_date DATETIME,
+  ship_mode varchar(60),
+  customer_name varchar2(50),
+  segment varchar(40),
+  state varchar(60),
+  country varchar(60),
+  market varchar(80),
+  region varchar(70),
+  product_id varchar(60),
+  category varchar(60),
+  sub_category varchar(60),
+  product_name string(200),
+  sales number(10,0) ,
+  quantity int,
+  discount float,
+  profit float,
+  shipping_cost float,
+  order_priority varchar(90),
+  year int
+  );
+  
+  select*from SALES_DATA;
+ 
+
+Stage file to internal stage
+Executed the copy into command
+COPY INTO PRODUCT FROM @tsv_stage/PRODUCT.TSV.gz
+
+                    FILE_FORMAT = '"TITANIC"."PUBLIC"."TSV"'
+
+                    ON_ERROR = 'ABORT_STATEMENT';
+
+
+---2.Check the data type for Order date and Ship date and mention in what data type
+--it should be?
+SELECT*,
+TO_CHAR(DATE(ORDER_DATE,'MM-DD-YYYY'),'YYYY-MM-DD') AS ORDER_DATE2
+FROM SALES_DATA;
+
+SELECT*,
+TO_CHAR(DATE(SHIP_DATE,'MM-DD-YYYY'),'YYYY-MM-DD') AS SHIP_DATE2
+FROM SALES_DATA;
+ --The date data type is an abstract data type.
+ 
+ ---3.Create a new column called order_extract and extract the number after the last
+--‘–‘from Order ID column.
+
+(SELECT SUBSTR(ORDER_ID,9) AS ORDER_EXTRACT FROM SALES_DATA);
+
+--4.--Create a new column called Discount Flag and categorize it based on discount.
+---Use ‘Yes’ if the discount is greater than zero else ‘No’.
+-
+SELECT*,CASE 
+          WHEN DISCOUNT>0 THEN 'YES'
+ELSE 'NO'
+END AS DISCOUNT_FLAG
+FROM SALES_DATA;
+
+---6.Create a new column called process days and calculate how many days it takes
+---for each order id to process from the order to its shipment.
+
+SELECT DATEDIFF(day, ORDER_DATE, SHIP_DATE) AS process_days FROM SALES_DATA;
+
+---7.Create a new column called Rating and then based on the Process dates give
+--rating like given below.
+
+select*,case 
+       when process_days=3 then 'rating 5'
+       when process_days>3 or process_days<=6 then 'rating 4'
+       when process_days>6 or process_days<=10 then 'rating 3'
+       when process_days>10 then 'rating 2'
+ else process_days 
+ end as rating
+ from sales_data;
+
+ select*from SALES_DATA;
