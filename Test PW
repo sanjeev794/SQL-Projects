@@ -1,0 +1,125 @@
+Q11 Create Student Table with ID as Primary Key and NOT NULL , Name as 20 Characters ,Age as Int value both are NOT NULL and Address have  25 charter And Insert Any 5 Records? 
+
+CREATE TABLE Student (
+    ID INT PRIMARY KEY NOT NULL,
+    Name VARCHAR(20) NOT NULL,
+    Age INT NOT NULL,
+    Address VARCHAR(25)
+);
+
+-- Insert 5 records into the Student table
+INSERT INTO Student (ID, Name, Age, Address)
+VALUES
+    (1, 'John Doe', 22, '123 Main St, City1'),
+    (2, 'Jane Smith', 21, '456 Elm St, City2'),
+    (3, 'Bob Johnson', 23, '789 Oak St, City3'),
+    (4, 'Alice Brown', 20, '101 Pine St, City4'),
+    (5, 'Charlie Wilson', 24, '555 Cedar St, City5');
+
+Q12 Write an SQL query to find the youngest student in the "student" table
+SELECT *
+FROM student
+WHERE Age = (
+    SELECT MIN(Age)
+    FROM student
+);
+
+
+Q13  Write an SQL query to retrieve the names and addresses of all persons from the "Person" table along with their corresponding addresses from the "Address" table.
+
+Select P.FirstName,A.city,A.state from Person P inner join Address A on P.PersonId=A.PersonID
+
+Q14 Write an SQL query to fetch the second highest number from the "student" table.?
+
+SELECT DISTINCT Age
+FROM student
+ORDER BY Age DESC
+LIMIT 1 OFFSET 1;
+
+Q15 SQL Quary to get the nth highest salary from Employee table?
+
+SELECT DISTINCT Salary
+FROM Employee
+ORDER BY Salary DESC
+LIMIT 1 OFFSET (n - 1);
+
+Q16 Write a SQL query to find the median salary of each company.?
+
+SELECT Company, MedianSalary
+FROM (
+    SELECT
+        Company,
+        Salary,
+        ROW_NUMBER() OVER (PARTITION BY Company ORDER BY Salary) AS RowAsc,
+        ROW_NUMBER() OVER (PARTITION BY Company ORDER BY Salary DESC) AS RowDesc
+    FROM Employee
+) AS RankedSalaries
+WHERE RowAsc = RowDesc OR RowAsc + 1 = RowDesc OR RowAsc = RowDesc + 1
+
+Q17 Write a SQL to get the cumulative sum of an employee’s salary over a period of 3 month but exclude the most recent month? The result should be display by id ascending and then by month decending
+
+WITH SalaryData AS (
+    SELECT
+        EmployeeID,
+        Month,
+        Salary,
+        ROW_NUMBER() OVER (PARTITION BY EmployeeID ORDER BY Month DESC) AS RowNum
+    FROM EmployeeSalary
+)
+SELECT
+    sd.EmployeeID,
+    sd.Month,
+    SUM(ed.Salary) AS CumulativeSalary
+FROM SalaryData sd
+JOIN SalaryData ed ON sd.EmployeeID = ed.EmployeeID
+    AND ed.RowNum BETWEEN sd.RowNum + 1 AND sd.RowNum + 3
+GROUP BY sd.EmployeeID, sd.Month
+ORDER BY sd.EmployeeID ASC, sd.Month DESC;
+
+Q18  Write the Query to find the Shortest Distance in Plane
+
+SELECT
+    SQRT(POW(X2 - X1, 2) + POW(Y2 - Y1, 2)) AS ShortestDistance
+FROM
+(
+    SELECT
+        LEAD(X, 1) OVER (ORDER BY X) AS X2,
+        LEAD(Y, 1) OVER (ORDER BY X) AS Y2,
+        X AS X1,
+        Y AS Y1
+    FROM
+    (
+        SELECT -1 AS X, -1 AS Y
+        UNION
+        SELECT 0 AS X, 0 AS Y
+        UNION
+        SELECT -1 AS X, 2 AS Y
+    ) AS Points
+) AS PointPairs
+ORDER BY ShortestDistance
+LIMIT 1;
+
+Q19 Consider a database with two tables: "Orders" and "Customers." Write an SQL query to retrieve the top 5 customers who have made the most orders, 
+    along with the total count of their orders. Display the results in descending order of the order count and ascending order of customer names.
+
+SELECT
+    C.CustomerName,
+    COUNT(O.OrderID) AS OrderCount
+FROM Customers AS C
+LEFT JOIN Orders AS O ON C.CustomerID = O.CustomerID
+GROUP BY C.CustomerName
+ORDER BY OrderCount DESC, C.CustomerName ASC
+LIMIT 5;
+
+Q20 Consider a database schema that represents an online bookstore with two tables: books and orders. The books table has columns: 
+book_id, title, author, price, and stock_quantity. The orders table has columns: order_id, book_id, quantity, and order_date.
+Write an SQL query to find the top 3 bestselling products in terms of total quantity sold, along with their names and total quantities sold.
+
+SELECT
+    B.title AS BookTitle,
+    SUM(O.quantity) AS TotalQuantitySold
+FROM books AS B
+JOIN orders AS O ON B.book_id = O.book_id
+GROUP BY B.book_id, B.title
+ORDER BY TotalQuantitySold DESC
+LIMIT 3;
